@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harsha Bot</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .chat-container { width: 420px; height: 620px; background: #16213e; border-radius: 20px; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; }
+        .chat-header { background: linear-gradient(135deg, #0f3460, #533483); padding: 20px; text-align: center; color: white; }
+        .chat-header h1 { font-size: 22px; font-weight: 700; }
+        .chat-header p { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .user-message { background: linear-gradient(135deg, #0f3460, #533483); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .bot-message { background: #0f3460; color: #e0e0e0; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .typing { background: #0f3460; color: #888; align-self: flex-start; border-bottom-left-radius: 4px; font-style: italic; }
+        .chat-input { padding: 16px; background: #0f3460; display: flex; gap: 10px; align-items: center; }
+        .chat-input input { flex: 1; padding: 12px 16px; border: none; border-radius: 25px; background: #16213e; color: white; font-size: 14px; outline: none; }
+        .chat-input input::placeholder { color: #666; }
+        .send-btn { background: linear-gradient(135deg, #0f3460, #533483); color: white; border: none; padding: 12px 20px; border-radius: 25px; cursor: pointer; font-size: 14px; font-weight: 600; transition: opacity 0.2s; }
+        .send-btn:hover { opacity: 0.8; }
+        .clear-btn { background: #e74c3c; color: white; border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 12px; transition: opacity 0.2s; }
+        .clear-btn:hover { opacity: 0.8; }
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: #533483; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 Harsha Bot</h1>
+            <p>AI Chatbot with Memory</p>
+        </div>
+        <div class="chat-messages" id="messages">
+            <div class="message bot-message">Hello! I am Harsha Bot. How can I help you today? 😊</div>
+        </div>
+        <div class="chat-input">
+            <button class="clear-btn" onclick="clearChat()">🗑️</button>
+            <input type="text" id="userInput" placeholder="Type a message..." onkeypress="handleKey(event)"/>
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById("userInput");
+            const message = input.value.trim();
+            if (!message) return;
+            addMessage(message, "user");
+            input.value = "";
+            const typing = addMessage("Typing...", "typing");
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({message})
+                });
+                const data = await response.json();
+                typing.remove();
+                addMessage(data.reply, "bot");
+            } catch (e) {
+                typing.remove();
+                addMessage("Error! Please try again.", "bot");
+            }
+        }
+        async function clearChat() {
+            await fetch("/clear", {method: "POST"});
+            const messages = document.getElementById("messages");
+            messages.innerHTML = '<div class="message bot-message">Memory cleared! Fresh start 😊</div>';
+        }
+        function addMessage(text, type) {
+            const messages = document.getElementById("messages");
+            const div = document.createElement("div");
+            div.className = `message ${type}-message`;
+            div.textContent = text;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+            return div;
+        }
+        function handleKey(e) {
+            if (e.key === "Enter") sendMessage();
+        }
+    </script>
+</body>
+</html>
