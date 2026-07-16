@@ -1,1 +1,7 @@
 .env 
+__pycache__/*
+chat_history.json
+triage_agent_3.py 
+triage_agent_4.py 
+harsha.py
+fileagent.py
